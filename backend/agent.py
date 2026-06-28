@@ -8,6 +8,9 @@ import asyncio
 from typing import AsyncGenerator
 
 vertexai.init(project=GCP_PROJECT, location=GCP_LOCATION)
+import logging
+logger = logging.getLogger(__name__)
+logger.info(f"Vertex AI initialized: project={GCP_PROJECT} location={GCP_LOCATION} model={AXIOM_MODEL}")
 
 SYSTEM_INSTRUCTION = """
 You are AXIOM, an evidence-grounded clinical AI for menopause care.
@@ -19,28 +22,68 @@ when interpreting results.
 """
 
 def parse_evidence_cards(evidence_text: str) -> list[dict]:
-    """Parse query_evidence or search_pubmed text output into frontend card dicts."""
+    """Parse query_evidence formatted output into frontend card dicts.
+    
+    Expected block format from server.py:
+      ### Result N
+      **PMID**: 12345678 | **Journal**: Journal Name | **Year**: 2023
+      **Study Type**: meta-analysis | **Composite Score**: 0.743 (...)
+      
+      Article title here
+      
+      Abstract text...
+    """
     import re
+    # Strip the query_evidence header line before parsing
+    evidence_text = re.sub(
+        r"Found \d+ results, ranked by evidence quality \(from \d+ stored articles\):\n*",
+        "",
+        evidence_text
+    )
     cards = []
-    # Pattern matches query_evidence formatted output
     blocks = re.split(r"---+", evidence_text)
-    for block in blocks[:5]:  # Cap at 5 cards
-        pmid_match = re.search(r"PMID[:\*\s]+(\d+)", block)
-        title_match = re.search(r"\*\*(.+?)\*\*", block)
-        year_match = re.search(r"\((\d{4})\)", block)
-        score_match = re.search(r"Composite Score\*\*:\s*([\d.]+)", block)
-        journal_match = re.search(r"Journal\*\*:\s*([^\|]+)", block)
+    
+    for block in blocks[:5]:
+        pmid_match   = re.search(r"\*\*PMID\*\*:\s*(\d+)", block)
+        year_match   = re.search(r"\*\*Year\*\*:\s*(\d{4})", block)
+        score_match  = re.search(r"\*\*Composite Score\*\*:\s*([\d.]+)", block)
+        journal_match = re.search(r"\*\*Journal\*\*:\s*([^|]+)", block)
         
-        if pmid_match:
-            excerpt = re.sub(r"\*\*.*?\*\*|\#.*?\n|Composite Score.*?\n", "", block).strip()
-            cards.append({
-                "pmid": pmid_match.group(1),
-                "title": title_match.group(1).strip() if title_match else "Untitled",
-                "year": year_match.group(1) if year_match else "Unknown",
-                "score": float(score_match.group(1)) if score_match else 0.0,
-                "journal": journal_match.group(1).strip() if journal_match else "",
-                "excerpt": excerpt[:300]
-            })
+        if not pmid_match:
+            continue
+        
+        # Title is the first non-empty line after the Composite Score line
+        title = "Untitled"
+        lines = block.split("\n")
+        past_score_line = False
+        for line in lines:
+            if "Composite Score" in line:
+                past_score_line = True
+                continue
+            if past_score_line and line.strip():
+                # Strip any remaining markdown bold markers
+                title = re.sub(r"\*\*|<[^>]+>", "", line.strip())
+                break
+        
+        # Excerpt: text after the title line, cleaned of markdown
+        excerpt_raw = re.sub(
+            r"#{1,3} Result \d+|"
+            r"\*\*PMID\*\*:.*|"
+            r"\*\*Study Type\*\*:.*|"
+            r"\*\*Composite Score\*\*:.*|"
+            r"<[^>]+>",
+            "", block
+        ).strip()
+        
+        cards.append({
+            "pmid":    pmid_match.group(1),
+            "title":   title,
+            "year":    year_match.group(1) if year_match else "Unknown",
+            "score":   float(score_match.group(1)) if score_match else 0.0,
+            "journal": journal_match.group(1).strip() if journal_match else "",
+            "excerpt": excerpt_raw[:300]
+        })
+    
     return cards
 
 
@@ -136,7 +179,7 @@ Synthesize a clinical answer grounded only in the evidence above.
 Cite PMIDs. Note if evidence is limited or if confidence was below threshold ({threshold})."""
     
     try:
-        response = model.generate_content(prompt)
+        response = await asyncio.to_thread(model.generate_content, prompt)
         answer_text = response.text
     except Exception as e:
         trace.append(f"[EXIT_C] synthesis failed: {e}")

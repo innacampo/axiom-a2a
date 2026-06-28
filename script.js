@@ -229,11 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
+                    if (!line.startsWith('data: ')) continue;
                     try {
-                        const event = JSON.parse(line);
+                        const event = JSON.parse(line.slice(6));
                         handleSseEvent(event.type, event.data);
                     } catch (e) {
-                        console.error("Error parsing SSE JSON line", e, line);
+                        console.error("Error parsing SSE JSON line", e, line.slice(6));
                     }
                 }
             }

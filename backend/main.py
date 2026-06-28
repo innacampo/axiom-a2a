@@ -13,7 +13,41 @@ from backend.agent import run_axiom_agent
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AXIOM API")
+from contextlib import asynccontextmanager
+from backend.mcp_bridge import ingest_to_chroma
+
+WARMUP_TOPICS = [
+    "hormone therapy vasomotor symptoms menopause randomized controlled trial",
+    "estrogen hot flashes clinical evidence systematic review",
+    "menopause hormone replacement therapy cardiovascular risk meta-analysis",
+    "HRT cognitive function menopause clinical trial",
+    "menopausal transition brain health estrogen neuroprotection",
+]
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-warm ChromaDB on startup
+    from backend.mcp_bridge import call_mcp_tool
+    try:
+        count_result = await call_mcp_tool("query_evidence", 
+                                           {"question": "menopause", "top_k": 1})
+        # Parse article count from header line "from N stored articles"
+        import re
+        match = re.search(r"from (\d+) stored articles", count_result)
+        count = int(match.group(1)) if match else 0
+        
+        if count < 100:
+            logger.info(f"ChromaDB has {count} articles — running warmup ingestion")
+            for topic in WARMUP_TOPICS:
+                await ingest_to_chroma(topic, max_results=10)
+                logger.info(f"Ingested: {topic[:50]}")
+        else:
+            logger.info(f"ChromaDB ready: {count} articles")
+    except Exception as e:
+        logger.warning(f"Warmup failed (non-fatal): {e}")
+    yield
+
+app = FastAPI(title="AXIOM API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,25 +69,8 @@ def health():
 async def query_endpoint(request: QueryRequest):
     async def event_generator() -> AsyncGenerator[dict, None]:
         try:
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 1, "status": "active"}})}
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 1, "status": "complete"}})}
-            
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 2, "status": "active"}})}
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 2, "status": "complete"}})}
-            
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 3, "status": "active"}})}
-            
-            # call agent
             async for event in run_axiom_agent(request.query, request.confidence_threshold):
                 yield {"data": json.dumps(event)}
-                
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 4, "status": "active"}})}
-            yield {"data": json.dumps({"type": "step_update", "data": {"step": 4, "status": "complete"}})}
-            
-            yield {"data": json.dumps({"type": "answer", "data": {"text": "This is a placeholder answer."}})}
-            yield {"data": json.dumps({"type": "evidence", "data": {"items": []}})}
-            yield {"data": json.dumps({"type": "audit", "data": {"trace": "Placeholder audit trace"}})}
-            
         except Exception as e:
             logger.error(f"Error in query stream: {e}")
             yield {"data": json.dumps({"type": "error", "data": {"message": str(e)}})}

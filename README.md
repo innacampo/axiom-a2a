@@ -33,5 +33,5 @@ uvicorn backend.main:app --reload
 ## Deploy to Cloud Run
 
 ```bash
-gcloud run deploy axiom --source . --set-env-vars GCP_PROJECT=axiom-agent-500220,GCP_LOCATION=us-central1
+gcloud run deploy axiom --source . --set-env-vars GCP_PROJECT=your_project_id,GCP_LOCATION=your_region,PUBMED_API_KEY=your_pubmed_api_key,AXIOM_MODEL=gemini-2.5-flash
 ```
