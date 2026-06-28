@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="axiom-api-url" content="http://localhost:8000">
+    <title>AXIOM - HARMONI Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">HARMONI Lab</div>
+            <div class="header-right">AXIOM v0.1 Preview</div>
+        </div>
+    </header>
+
+    <div id="results-banner" class="results-banner hidden">
+        <div class="banner-content">✓  Evidence threshold met  ·  confidence: 0.83</div>
+    </div>
+
+    <main class="main-container">
+        <!-- Screen 1: Idle / Query -->
+        <div id="screen-1" class="screen active">
+            <div class="hero">
+                <h1 class="headline">Evidence-grounded answers for menopause care</h1>
+                <p class="subline">AXIOM retrieves, evaluates, and cites clinical evidence before answering.</p>
+            </div>
+
+            <form id="query-form" class="query-section">
+                <div class="textarea-wrapper">
+                    <textarea id="query-input" placeholder="What does current evidence say about hormone therapy and vasomotor symptoms?" rows="3"></textarea>
+                    <div id="char-count" class="char-count">0</div>
+                </div>
+
+                <div class="slider-section">
+                    <div class="slider-header">
+                        <span class="slider-label">Evidence confidence threshold</span>
+                        <span class="slider-value" id="slider-value">0.75</span>
+                    </div>
+                    <input type="range" id="confidence-slider" min="0.5" max="1.0" step="0.05" value="0.75">
+                    <p class="slider-helper">AXIOM will retry retrieval up to 3 times to meet this threshold.</p>
+                </div>
+
+                <button type="submit" id="submit-btn" disabled>RETRIEVE EVIDENCE</button>
+                <p class="keyboard-hint">Cmd+Enter to submit</p>
+            </form>
+
+            <!-- Screen 2: Processing State -->
+            <div id="step-tracker-container" class="step-tracker-container hidden">
+                <div class="steps-list" id="steps-list">
+                    <div class="step" id="step-1">
+                        <div class="step-icon pending"></div>
+                        <div class="step-label pending">Parsing query</div>
+                    </div>
+                    <div class="step" id="step-2">
+                        <div class="step-icon pending"></div>
+                        <div class="step-label pending">Retrieving evidence from PubMed corpus</div>
+                    </div>
+                    <div class="step" id="step-3">
+                        <div class="step-icon pending"></div>
+                        <div class="step-label pending">Evaluating confidence</div>
+                    </div>
+                    <div class="step" id="step-4">
+                        <div class="step-icon pending"></div>
+                        <div class="step-label pending">Formulating answer</div>
+                    </div>
+                </div>
+
+                <div id="confidence-meter-container" class="confidence-meter-container hidden">
+                    <div class="confidence-meter-header">
+                        <span class="confidence-meter-label" id="confidence-meter-label">Current confidence: 0.71</span>
+                    </div>
+                    <div class="confidence-meter-track">
+                        <div class="confidence-meter-fill" id="confidence-meter-fill"></div>
+                    </div>
+                    <p class="confidence-meter-status" id="confidence-meter-status">Below threshold &mdash; retrying...</p>
+                </div>
+
+                <div class="cancel-link-container">
+                    <button type="button" id="cancel-btn" class="cancel-link">Cancel query</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Results -->
+        <div id="screen-3" class="screen hidden">
+            <div class="answer-panel">
+                <p id="answer-text"></p>
+                <div class="answer-disclaimer">
+                    ⚠ AXIOM is an experimental AI system. All generated responses and cited evidence must be independently verified by a qualified clinician before use in patient care.
+                </div>
+            </div>
+
+            <div class="evidence-section" id="evidence-section">
+                <h2 class="section-header">RETRIEVED EVIDENCE</h2>
+            </div>
+
+            <div class="audit-trail-container">
+                <button id="audit-toggle" class="audit-toggle">View agent trace &darr;</button>
+                <div id="audit-panel-wrapper" class="audit-panel-wrapper">
+                    <div class="audit-panel-inner">
+                        <div id="audit-panel" class="audit-panel">
+                            <pre class="audit-table" id="audit-table"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="new-query-container">
+                <button id="new-query-btn" class="new-query-btn">Start new query</button>
+            </div>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
