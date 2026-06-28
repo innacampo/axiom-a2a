@@ -207,3 +207,30 @@ cp -r skills/{skill-name} ~/.claude/skills/
 Add the skill to project knowledge or paste SKILL.md contents into the conversation.
 
 If the skill requires network access, instruct users to add required domains at `claude.ai/settings/capabilities`.
+
+## System Architecture and Integration Guide
+
+### 1. System Architecture Diagram
+- Visual layout of agent roles.
+- Orchestration flow between agents.
+- Identification of host vs. client agents.
+
+### 2. MCP Server Configuration & Registry
+- List of all active MCP servers.
+- Exposed tools, resources, and prompts.
+- Connection strings and environment variables.
+
+### 3. State Management & Context Hand-offs
+- Methods for maintaining session context.
+- Protocol for passing data between agents.
+- Token optimization and context-window strategy.
+
+### 4. Security & Authentication Model
+- API key and credential management.
+- Transport layer security definitions.
+- Agent access control levels.
+
+### 5. Local Development & Testing Workflow
+- Instructions for mock server setups.
+- Steps to trace agent protocol logs.
+- Validation checks for new tools.
