@@ -22,6 +22,7 @@ steps:
       '--max-instances', '1',
       '--timeout', '300',
       '--cpu-boost',
+      '--allow-unauthenticated',
       '--set-env-vars', 'GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=us-central1,AXIOM_MODEL=gemini-2.5-flash,MCP_TRANSPORT=streamable-http,MCP_PORT=8001,PUBMED_MCP_URL=http://localhost:8001',
       '--set-secrets', 'ENTREZ_EMAIL=ENTREZ_EMAIL:latest,ENTREZ_API_KEY=ENTREZ_API_KEY:latest',
     ]
