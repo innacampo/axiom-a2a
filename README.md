@@ -9,7 +9,9 @@ AXIOM operates on a perceive→plan→act→observe→iterate loop. The agent re
 ## Architecture
 
 ```
-User → FastAPI → ADK Orchestrator → AXIOM-MCP (PubMed) → PubMed API
+User → FastAPI → ADK Orchestrator → AXIOM-MCP
+                                         ├── ChromaDB (primary, local)
+                                         └── PubMed API (fallback, live)
 ```
 
 ## Agent concepts demonstrated
@@ -19,6 +21,16 @@ User → FastAPI → ADK Orchestrator → AXIOM-MCP (PubMed) → PubMed API
 - Retry loop with stopping condition
 - Evidence-grounded synthesis (no hallucinated confidence)
 
+## What makes this different
+
+Most clinical AI systems either hallucinate confidence or outsource uncertainty to the user.
+AXIOM does neither: it surfaces the confidence score directly, shows the retry trace, and
+will tell you "evidence is limited" rather than synthesize an answer from insufficient data.
+
+The `check_retractions` tool is baked into the MCP server — any evidence retrieved can be
+cross-checked against known retracted literature before synthesis. Most demo systems skip
+this step entirely.
+
 ## Run locally
 
 ```bash
@@ -27,11 +39,24 @@ cd <repository_directory>
 cp .env.example .env
 # Fill in your API keys in the .env file
 pip install -r requirements.txt
+
+# Terminal 1 — start MCP server first
+cd app/pubmed-mcp-server && python server.py
+
+# Terminal 2 — start FastAPI backend
 uvicorn backend.main:app --reload
 ```
 
 ## Deploy to Cloud Run
 
 ```bash
-gcloud run deploy axiom --source . --set-env-vars GCP_PROJECT=your_project_id,GCP_LOCATION=your_region,PUBMED_API_KEY=your_pubmed_api_key,AXIOM_MODEL=gemini-2.5-flash
+gcloud run deploy axiom --source . \
+  --region us-central1 \
+  --set-env-vars GCP_PROJECT=your-project-id,\
+GCP_LOCATION=us-central1,\
+AXIOM_MODEL=gemini-2.5-flash,\
+MCP_TRANSPORT=streamable-http,\
+MCP_PORT=8001 \
+  --set-secrets ENTREZ_EMAIL=ENTREZ_EMAIL:latest,\
+ENTREZ_API_KEY=ENTREZ_API_KEY:latest
 ```

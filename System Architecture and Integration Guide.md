@@ -3,7 +3,7 @@
 ## 1. System Architecture Diagram
 
 *   **Visual layout of agent roles:** 
-    *   **Frontend:** Next.js application providing the UI and rendering real-time streaming updates.
+    *   **Frontend:** Vanilla HTML/CSS/JS served as static files by FastAPI. Real-time updates rendered via a custom SSE stream reader using the Fetch API.
     *   **API Gateway:** FastAPI serving as the backend and routing requests via SSE (Server-Sent Events).
     *   **ADK Orchestrator:** A custom Python agent (`backend/agent.py`) utilizing Google Vertex AI (`gemini-2.0-flash`).
     *   **Data Layer:** ChromaDB (via the MCP Server) for semantic search over PubMed abstracts.
@@ -23,6 +23,7 @@
 *   **Exposed tools, resources, and prompts:** 
     *   `query_evidence`: Queries the local ChromaDB for vectorized PubMed evidence based on the user's clinical question.
     *   `search_pubmed`: Directly searches live PubMed data as a raw fallback mechanism.
+    *   `check_retractions`: Verifies cited evidence against known retracted literature. Runs as a safety gate before evidence is passed to synthesis.
     *   `ingest_to_chroma`: Fetches data from the live PubMed API and embeds it into the ChromaDB vector store for semantic querying.
 *   **Connection strings and environment variables:** 
     *   `PUBMED_MCP_URL`: HTTP streamable endpoint (defaults to `http://localhost:8001`).
