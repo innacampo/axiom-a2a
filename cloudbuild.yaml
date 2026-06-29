@@ -13,6 +13,7 @@ steps:
     args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/axiom-repo/axiom-app:$COMMIT_SHA']
 
   # Step 3: Deploy to Cloud Run with your GCS Bucket Mount
+# Step 3: Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args: [
       'run', 'deploy', 'axiom-service',
@@ -20,7 +21,8 @@ steps:
       '--region', 'us-central1',
       '--service-account', '220964896886-compute@developer.gserviceaccount.com',
       '--add-volume', 'name=chroma-storage,type=cloud-storage,bucket=medical-evidence-mcp-chroma-storage',
-      '--add-volume-mount', 'volume=chroma-storage,mount-path=/app/medical-evidence-mcp/chroma_data'
+      '--add-volume-mount', 'volume=chroma-storage,mount-path=/app/medical-evidence-mcp/chroma_data',
+      '--max-instances', '1'
     ]
 
 options:
