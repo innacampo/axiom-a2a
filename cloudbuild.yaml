@@ -11,20 +11,20 @@ steps:
     args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/axiom-repo/axiom-app:$COMMIT_SHA']
 
   - name: 'gcr.io/cloud-builders/gcloud'
-      args: [
-        'run', 'deploy', 'axiom-service',
-        '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/axiom-repo/axiom-app:$COMMIT_SHA',
-        '--region', 'us-central1',
-        '--service-account', '220964896886-compute@developer.gserviceaccount.com',
-        '--memory', '2Gi',
-        '--cpu', '2',
-        '--min-instances', '1',
-        '--max-instances', '1',
-        '--timeout', '300',
-        '--cpu-boost',
-        '--set-env-vars', 'GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=us-central1,AXIOM_MODEL=gemini-2.5-flash,MCP_TRANSPORT=streamable-http,MCP_PORT=8001,PUBMED_MCP_URL=http://localhost:8001',
-        '--set-secrets', 'ENTREZ_EMAIL=ENTREZ_EMAIL:latest,ENTREZ_API_KEY=ENTREZ_API_KEY:latest',
-      ]
+    args: [
+      'run', 'deploy', 'axiom-service',
+      '--image', 'us-central1-docker.pkg.dev/$PROJECT_ID/axiom-repo/axiom-app:$COMMIT_SHA',
+      '--region', 'us-central1',
+      '--service-account', '220964896886-compute@developer.gserviceaccount.com',
+      '--memory', '2Gi',
+      '--cpu', '2',
+      '--min-instances', '1',
+      '--max-instances', '1',
+      '--timeout', '300',
+      '--cpu-boost',
+      '--set-env-vars', 'GCP_PROJECT=$PROJECT_ID,GCP_LOCATION=us-central1,AXIOM_MODEL=gemini-2.5-flash,MCP_TRANSPORT=streamable-http,MCP_PORT=8001,PUBMED_MCP_URL=http://localhost:8001',
+      '--set-secrets', 'ENTREZ_EMAIL=ENTREZ_EMAIL:latest,ENTREZ_API_KEY=ENTREZ_API_KEY:latest',
+    ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
