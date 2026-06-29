@@ -4,24 +4,20 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl git && rm -rf /var/lib/apt/lists/*
 
 # Clone MCP server from GitHub at build time
-RUN git clone https://github.com/innacampo/medical-evidence-mcp.git \
-    /app/medical-evidence-mcp
-
-# Install MCP server dependencies
+RUN git clone https://github.com/innacampo/medical-evidence-mcp.git /app/medical-evidence-mcp
 RUN pip install -r /app/medical-evidence-mcp/requirements.txt --no-cache-dir
 
 # Install AXIOM backend dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
 
-# Pre-download sentence-transformers model
+# 🔥 MOVE THIS UP: Pre-download model (cached unless requirements change)
 RUN python -c "from sentence_transformers import SentenceTransformer; \
     SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
 
-# ChromaDB directory
 RUN mkdir -p /app/medical-evidence-mcp/chroma_data
 
-# Copy AXIOM backend and frontend
+# 📂 COPY CODE LAST: (Changes here won't trigger the model re-download)
 COPY backend/ ./backend/
 COPY index.html style.css script.js ./
 COPY start.sh /app/start.sh
