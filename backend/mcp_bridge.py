@@ -1,5 +1,5 @@
 # Connects to AXIOM MCP server running on PUBMED_MCP_URL.
-# Start the MCP server first: python server.py (from the pubmed-mcp-server directory)
+# Start the MCP server first: python server.py (from the medical-evidence-mcp directory)
 # MCP_TRANSPORT=streamable-http (default) — server runs on port 8001
 
 import logging

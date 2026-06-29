@@ -41,7 +41,7 @@ cp .env.example .env
 pip install -r requirements.txt
 
 # Terminal 1 — start MCP server first
-cd app/pubmed-mcp-server && python server.py
+cd app/medical-evidence-mcp && python server.py
 
 # Terminal 2 — start FastAPI backend
 uvicorn backend.main:app --reload

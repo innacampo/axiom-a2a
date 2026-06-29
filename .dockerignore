@@ -4,4 +4,4 @@ __pycache__/
 *.pyc
 .git
 .DS_Store
-app/pubmed-mcp-server/chroma_data/
+app/medical-evidence-mcp/chroma_data/

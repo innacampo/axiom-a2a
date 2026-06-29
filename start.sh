@@ -2,7 +2,7 @@
 set -e
 
 echo "[AXIOM] Starting MCP server (port 8001)..."
-cd /app/pubmed-mcp-server
+cd /app/medical-evidence-mcp
 python server.py &
 MCP_PID=$!
 
